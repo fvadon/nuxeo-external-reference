@@ -1,0 +1,13 @@
+Manifest-Version: 1.0
+Bundle-SymbolicName: org.nuxeo.labs.reference
+Bundle-Name: nuxeo-labs-external-reference
+Bundle-Version: 1.0.qualifier
+Bundle-ClassPath: .
+Bundle-ActivationPolicy: lazy
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+Bundle-ManifestVersion: 2
+Bundle-Vendor: Nuxeo
+Nuxeo-Component: OSGI-INF/extensions/org.nuxeo.labs.reference.director
+ yContrib.xml,OSGI-INF/extensions/org.nuxeo.labs.reference.operation.A
+ ddExternalReference.xml
+

@@ -1,0 +1,8 @@
+<component name="org.nuxeo.labs.reference.operation.AddExternalReference">
+
+  <extension target="org.nuxeo.ecm.core.operation.OperationServiceComponent"
+    point="operations" >
+      <operation class="org.nuxeo.labs.reference.operation.AddExternalReference" />
+   </extension>
+    
+</component>
