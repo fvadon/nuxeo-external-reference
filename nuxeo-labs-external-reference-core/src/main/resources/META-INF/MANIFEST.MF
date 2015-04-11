@@ -10,5 +10,6 @@ Bundle-Vendor: Nuxeo
 Nuxeo-Component: OSGI-INF/extensions/org.nuxeo.labs.reference.director
  yContrib.xml,OSGI-INF/extensions/org.nuxeo.labs.reference.operation.A
  ddExternalReference.xml,OSGI-INF/extensions/org.nuxeo.labs.reference.
- operation.RemoveExternalReference.xml
+ operation.RemoveExternalReference.xml,OSGI-INF/extensions/org.nuxeo.l
+ abs.reference.operation.GetExternalReferenceInfo.xml
 

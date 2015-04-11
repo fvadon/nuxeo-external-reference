@@ -14,6 +14,7 @@ import org.nuxeo.ecm.automation.core.operations.document.PublishDocument;
 import org.nuxeo.ecm.automation.test.EmbeddedAutomationServerFeature;
 import org.nuxeo.ecm.core.api.CoreSession;
 import org.nuxeo.ecm.core.api.DocumentModel;
+import org.nuxeo.ecm.core.api.DocumentModelList;
 import org.nuxeo.ecm.core.test.CoreFeature;
 import org.nuxeo.ecm.directory.Session;
 import org.nuxeo.ecm.directory.api.DirectoryService;
@@ -111,6 +112,18 @@ public class ExternalRefTest {
         assertEquals("4",dm.getId());
         assertEquals(dm.getPropertyValue(ExternalReferenceConstant.EXTERNAL_LIVEDOC_UID_FIELD),docToPublish.getId());
 
+
+        //Testing get info
+        OperationChain chain7 = new OperationChain("testAddProxy");
+        chain7.add(GetExternalReferenceInfo.ID).set("ExternalReference", "someExternalReference").set("DocumentUID", publishedDoc.getId());
+        DocumentModelList dml = (DocumentModelList) service.run(ctx, chain7);
+        assertEquals(1,dml.size());
+
+        OperationChain chain8 = new OperationChain("testAddProxy");
+        chain8.add(GetExternalReferenceInfo.ID).set("DocumentUID", docToPublish.getId());
+        dml = (DocumentModelList) service.run(ctx, chain8);
+        //should be 4 because there is also a version using this.
+        assertEquals(4,dml.size());
 
         //Testing deletion from Proxy ID
         OperationChain chain4 = new OperationChain("testAddProxy");

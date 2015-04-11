@@ -157,4 +157,47 @@ public class AbstractExternalReferenceOperation extends
         }
 
     }
+
+    /**
+     *
+     * @param documentUID
+     * @param externalReference
+     * @return a DocumentModelList of any combination of the search on
+     *         DocumentUID and ExternalReference.
+     */
+    protected DocumentModelList getExternalReferenceInfo(String documentUID,
+            String externalReference) {
+        DirectoryService dirService = Framework.getLocalService(DirectoryService.class);
+        Session dirSession = dirService.open(ExternalReferenceConstant.EXTERNAL_REF_DIRECTORY);
+
+        Map<String, Serializable> filter = new HashMap<String, Serializable>();
+
+        if (externalReference != null) {
+            filter.put(ExternalReferenceConstant.EXTERNAL_REF_FIELD,
+                    externalReference);
+        }
+        if (documentUID != null) {
+            filter.put(ExternalReferenceConstant.EXTERNAL_PROXY_UID_FIELD,
+                    documentUID);
+        }
+
+        DocumentModelList list = dirSession.query(filter);
+
+        if (list.size() == 0) {
+            // If there is no Proxy, try with Live docs as it can't be in both
+            filter.clear();
+            if (externalReference != null) {
+                filter.put(ExternalReferenceConstant.EXTERNAL_REF_FIELD,
+                        externalReference);
+            }
+            if (documentUID != null) {
+                filter.put(ExternalReferenceConstant.EXTERNAL_LIVEDOC_UID_FIELD,
+                        documentUID);
+            }
+            list = dirSession.query(filter);
+        }
+
+        return list;
+
+    }
 }
