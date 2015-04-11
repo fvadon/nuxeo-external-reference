@@ -66,16 +66,15 @@ public class AbstractExternalReferenceOperation extends
                 if (!docToAdd.isProxy()) {
                     dm = addExternalRef(dirSession, documentUID, null,
                             externalReference);
-                }
-                else{
-                // It's a proxy get the live doc
-                DocumentModel documentLive = coreSession.getSourceDocument(new IdRef(
-                        documentUID));
-                if(documentLive.isVersion()){
-                    documentLive=coreSession.getSourceDocument(documentLive.getRef());
-                }
-                dm = addExternalRef(dirSession, documentLive.getId(), documentUID,
-                        externalReference);
+                } else {
+                    // It's a proxy get the live doc
+                    DocumentModel documentLive = coreSession.getSourceDocument(new IdRef(
+                            documentUID));
+                    if (documentLive.isVersion()) {
+                        documentLive = coreSession.getSourceDocument(documentLive.getRef());
+                    }
+                    dm = addExternalRef(dirSession, documentLive.getId(),
+                            documentUID, externalReference);
                 }
             }
         }
@@ -110,4 +109,52 @@ public class AbstractExternalReferenceOperation extends
         return dm;
     }
 
+    /**
+     * Removes any tuples of DocumentUID and External Reference. If one is null,
+     * then removes all occurrences. Making the assumption that they are not
+     * both null...
+     *
+     * @param documentUID
+     * @param ExternalReference
+     */
+    protected void removeExternalReference(String documentUID,
+            String ExternalReference) {
+        DirectoryService dirService = Framework.getLocalService(DirectoryService.class);
+        Session dirSession = dirService.open(ExternalReferenceConstant.EXTERNAL_REF_DIRECTORY);
+
+        Map<String, Serializable> filter = new HashMap<String, Serializable>();
+
+        // Look for lives doc references
+        if (documentUID != null) {
+
+            filter.put(ExternalReferenceConstant.EXTERNAL_LIVEDOC_UID_FIELD,
+                    documentUID);
+        }
+        if (ExternalReference != null) {
+            filter.put(ExternalReferenceConstant.EXTERNAL_REF_FIELD,
+                    ExternalReference);
+        }
+
+        DocumentModelList list = dirSession.query(filter);
+
+        for (DocumentModel entry : list) {
+            dirSession.deleteEntry(entry);
+        }
+        // Look for Proxy doc references
+        filter.clear();
+        if (ExternalReference != null) {
+            filter.put(ExternalReferenceConstant.EXTERNAL_REF_FIELD,
+                    ExternalReference);
+        }
+        if (documentUID != null) {
+            filter.put(ExternalReferenceConstant.EXTERNAL_PROXY_UID_FIELD,
+                    documentUID);
+        }
+        list = dirSession.query(filter);
+
+        for (DocumentModel entry : list) {
+            dirSession.deleteEntry(entry);
+        }
+
+    }
 }

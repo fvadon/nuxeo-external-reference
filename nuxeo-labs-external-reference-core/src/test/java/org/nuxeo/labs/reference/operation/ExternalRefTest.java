@@ -91,27 +91,52 @@ public class ExternalRefTest {
 
         //Testing adding refs for live doc ref only if does not exist.
         OperationChain chain = new OperationChain("testAddFirstSimpleEntry");
-        chain.add(AddExternalReference.ID).set("ExternalReference", "someExternalReference").set("DocumentUID", docToPublish.getId());
+        chain.add(AddExternalReference.ID).set("ExternalReference", "someExternalReference").set("DocumentUID", docToPublish.getId());//entry 1
         chain.add(AddExternalReference.ID).set("ExternalReference", "someExternalReference").set("DocumentUID", docToPublish.getId()); //shouldn't be added
-        chain.add(AddExternalReference.ID).set("ExternalReference", "somedifferentReference").set("DocumentUID", docToPublish.getId());
+        chain.add(AddExternalReference.ID).set("ExternalReference", "somedifferentReference").set("DocumentUID", docToPublish.getId()); //entry 2
         DocumentModel dm =(DocumentModel)service.run(ctx, chain);
         assertNotNull(dm);
         assertEquals("2",dm.getId());
         //Testing we can add an existing ref if we want.
         OperationChain chain2 = new OperationChain("testAddExisitingEntry");
-        chain2.add(AddExternalReference.ID).set("ExternalReference", "someExternalReference").set("DocumentUID", docToPublish.getId()).set("AddEvenIfAlreadyExist", true);
+        chain2.add(AddExternalReference.ID).set("ExternalReference", "someExternalReference").set("DocumentUID", docToPublish.getId()).set("AddEvenIfAlreadyExist", true); //entry 3 (1bis)
         dm =(DocumentModel)service.run(ctx, chain2);
         assertNotNull(dm);
         assertEquals("3",dm.getId());
         //Testing we can add a proxy and that the correct live doc was found.
         OperationChain chain3 = new OperationChain("testAddProxy");
-        chain3.add(AddExternalReference.ID).set("ExternalReference", "someExternalReference").set("DocumentUID", publishedDoc.getId());
+        chain3.add(AddExternalReference.ID).set("ExternalReference", "someExternalReference").set("DocumentUID", publishedDoc.getId()); //entry 4
         dm =(DocumentModel)service.run(ctx, chain3);
         assertNotNull(dm);
         assertEquals("4",dm.getId());
         assertEquals(dm.getPropertyValue(ExternalReferenceConstant.EXTERNAL_LIVEDOC_UID_FIELD),docToPublish.getId());
 
 
+        //Testing deletion from Proxy ID
+        OperationChain chain4 = new OperationChain("testAddProxy");
+        chain4.add(RemoveExternalReference.ID).set("ExternalReference", "someExternalReference").set("DocumentUID", publishedDoc.getId());
+        service.run(ctx, chain4);
+        assertNotNull(dirSession.getEntry("1"));
+        assertNotNull(dirSession.getEntry("2"));
+        assertNotNull(dirSession.getEntry("3"));
+        assertNull(dirSession.getEntry("4"));
+
+        //Testing deletion from reference
+        OperationChain chain5 = new OperationChain("testAddProxy");
+        chain5.add(RemoveExternalReference.ID).set("ExternalReference", "somedifferentReference");
+        service.run(ctx, chain5);
+        assertNotNull(dirSession.getEntry("1"));
+        assertNull(dirSession.getEntry("2"));
+        assertNotNull(dirSession.getEntry("3"));
+
+        //Testing deletion from tuple
+        OperationChain chain6 = new OperationChain("testAddProxy");
+        chain6.add(AddExternalReference.ID).set("ExternalReference", "someLastReference").set("DocumentUID", docToPublish.getId()); //entry 5
+        chain6.add(RemoveExternalReference.ID).set("ExternalReference", "someExternalReference").set("DocumentUID", docToPublish.getId());
+        service.run(ctx, chain6);
+        assertNull(dirSession.getEntry("1"));
+        assertNull(dirSession.getEntry("3"));
+        assertNotNull(dirSession.getEntry("5"));
 
 
 

@@ -9,5 +9,6 @@ Bundle-ManifestVersion: 2
 Bundle-Vendor: Nuxeo
 Nuxeo-Component: OSGI-INF/extensions/org.nuxeo.labs.reference.director
  yContrib.xml,OSGI-INF/extensions/org.nuxeo.labs.reference.operation.A
- ddExternalReference.xml
+ ddExternalReference.xml,OSGI-INF/extensions/org.nuxeo.labs.reference.
+ operation.RemoveExternalReference.xml
 
