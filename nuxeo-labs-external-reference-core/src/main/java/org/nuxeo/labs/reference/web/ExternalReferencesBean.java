@@ -1,5 +1,6 @@
 package org.nuxeo.labs.reference.web;
 
+import java.io.IOException;
 import java.io.Serializable;
 
 import org.jboss.seam.ScopeType;
@@ -21,6 +22,11 @@ public class ExternalReferencesBean extends AbstractExternalReferenceOperation i
     public DocumentModelList getExternalReferences(String DocumentId){
         return getExternalReferenceInfo(DocumentId, null);
     }
+
+    public DocumentModelList updateHippoRefsOfNuxeoDocumentBean(String DocumentId) throws IOException{
+        return updateHippoRefsOfNuxeoDocument(DocumentId);
+    }
+
 
 
 

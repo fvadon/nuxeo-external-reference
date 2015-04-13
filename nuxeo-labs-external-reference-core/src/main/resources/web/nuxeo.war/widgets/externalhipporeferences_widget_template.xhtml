@@ -1,0 +1,18 @@
+<f:subview xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:a4j="http://richfaces.org/a4j"
+	xmlns:nxu="http://nuxeo.org/nxweb/util"
+	xmlns:nxdir="http://nuxeo.org/nxdirectory"
+	xmlns:c="http://java.sun.com/jstl/core"
+	xmlns:nxp="http://nuxeo.org/nxweb/pdf" id="#{widget.id}">
+	<div>
+		<c:forEach var="externalRef"
+			items="#{externalReferences.updateHippoRefsOfNuxeoDocumentBean(currentDocument.id)}"
+			varStatus="status">
+			<div>
+				<h:outputText value="#{externalRef.usagedirectory.externalRef}"
+					title="#{externalRef.usagedirectory.externalRef}" />
+			</div>
+		</c:forEach>
+	</div>
+</f:subview>

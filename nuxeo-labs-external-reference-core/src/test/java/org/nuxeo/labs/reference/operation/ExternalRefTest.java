@@ -2,6 +2,9 @@ package org.nuxeo.labs.reference.operation;
 
 import static org.junit.Assert.*;
 
+import java.io.IOException;
+import java.util.List;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -35,7 +38,7 @@ import com.google.inject.Inject;
 @Features({ PlatformFeature.class, CoreFeature.class,
     EmbeddedAutomationServerFeature.class })
 @Deploy({ "org.nuxeo.labs.reference" })
-public class ExternalRefTest {
+public class ExternalRefTest extends AbstractExternalReferenceOperation{
 
     @Inject
     CoreSession session;
@@ -161,6 +164,26 @@ public class ExternalRefTest {
 
     }
 
+    @Test
+    public void hippoRefsTest() throws IOException {
+        String nuxeoUID= "ccd5a6f4-2440-4346-a021-36d2b613845c";
+        List<String> hippoRefs = getHippoRefsForDocument(nuxeoUID);
+        assertNotNull(hippoRefs);
+
+        List<String> nuxeoUIDs = getAllDocumentRefsInHippo();
+        assertNotNull(nuxeoUIDs);
+
+        addAllHippoRefs();
+        DocumentModelList externalRefList = getExternalReferenceInfo(nuxeoUID, null);
+        assertEquals(2,externalRefList.size());
+        externalRefList = updateHippoRefsOfNuxeoDocument(nuxeoUID);
+        assertEquals(2,externalRefList.size());
+        externalRefList = updateHippoRefsOfNuxeoDocument("imossibleID");
+        assertEquals(0,externalRefList.size());
+
+
+
+    }
 
 
 }

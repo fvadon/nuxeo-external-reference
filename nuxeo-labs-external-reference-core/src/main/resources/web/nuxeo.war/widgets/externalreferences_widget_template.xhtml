@@ -7,7 +7,7 @@
   xmlns:nxp="http://nuxeo.org/nxweb/pdf"
   id="#{widget.id}">
   <div>
-    <c:forEach var="externalRef" items="#{externalReferences.getExternalReferences(currentDocument.id)}" varStatus="status">
+    <c:forEach var="externalRef" items="#{externalReferences.updateHippoRefsOfNuxeoDocument(currentDocument.id)}" varStatus="status">
       <h:outputText value="#{externalRef.usagedirectory.externalRef}"
         title="#{externalRef.usagedirectory.externalRef}" />
     </c:forEach>
