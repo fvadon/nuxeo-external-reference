@@ -1,7 +1,7 @@
 # nuxeo-external-reference
 ===
 
-This plugin enables to store external references to nuxeo using automation operation. This external are link either to a nuxeo Document or to a Nuxeo Document proxy.
+This plugin enables to store external references to nuxeo using automation operation. This external are linked either to a nuxeo Document or to a Nuxeo Document proxy.
 
 Unit tests give usage examples.
 
