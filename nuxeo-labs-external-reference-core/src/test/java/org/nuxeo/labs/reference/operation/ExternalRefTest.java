@@ -152,7 +152,7 @@ public class ExternalRefTest {
         assertNotNull(dirSession.getEntry("5"));
 
 
-
+        dirSession.close();
 
 
 
