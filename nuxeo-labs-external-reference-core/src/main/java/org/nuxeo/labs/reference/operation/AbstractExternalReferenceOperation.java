@@ -78,6 +78,7 @@ public class AbstractExternalReferenceOperation extends
                 }
             }
         }
+        dirSession.close();
         return dm;
 
     }
@@ -105,6 +106,7 @@ public class AbstractExternalReferenceOperation extends
         }
 
         DocumentModel dm = dirSession.createEntry(map);
+        dirSession.close();
 
         return dm;
     }
@@ -155,6 +157,7 @@ public class AbstractExternalReferenceOperation extends
         for (DocumentModel entry : list) {
             dirSession.deleteEntry(entry);
         }
+        dirSession.close();
 
     }
 
