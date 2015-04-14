@@ -9,10 +9,11 @@
 		<c:forEach var="externalRef"
 			items="#{externalReferences.updateHippoRefsOfNuxeoDocumentBean(currentDocument.id)}"
 			varStatus="status">
-			<div>
-				<h:outputText value="#{externalRef.usagedirectory.externalRef}"
-					title="#{externalRef.usagedirectory.externalRef}" />
-			</div>
+				<div>
+				<h:outputLink value="#{externalRef.usagedirectory.externalRef}" >
+					#{externalRef.usagedirectory.externalRef}
+				</h:outputLink>
+				</div>
 		</c:forEach>
 	</div>
 </f:subview>
