@@ -16,6 +16,14 @@
       <idField>directoryId</idField>
       <autoincrementIdField>true</autoincrementIdField>
       <createTablePolicy>on_missing_columns</createTablePolicy>
+      <permissions>
+            <permission name="Read">
+                <group>members</group>
+            </permission>
+            <permission name="Write">
+                <group>members</group>
+            </permission>
+        </permissions>
     </directory>
   </extension>
   
