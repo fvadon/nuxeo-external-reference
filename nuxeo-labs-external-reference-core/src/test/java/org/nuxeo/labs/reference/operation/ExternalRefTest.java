@@ -173,13 +173,7 @@ public class ExternalRefTest extends AbstractExternalReferenceOperation{
         List<String> nuxeoUIDs = getAllDocumentRefsInHippo();
         assertNotNull(nuxeoUIDs);
 
-        addAllHippoRefs();
-        DocumentModelList externalRefList = getExternalReferenceInfo(nuxeoUID, null);
-        assertEquals(2,externalRefList.size());
-        externalRefList = updateHippoRefsOfNuxeoDocument(nuxeoUID);
-        assertEquals(2,externalRefList.size());
-        externalRefList = updateHippoRefsOfNuxeoDocument("imossibleID");
-        assertEquals(0,externalRefList.size());
+
 
 
 

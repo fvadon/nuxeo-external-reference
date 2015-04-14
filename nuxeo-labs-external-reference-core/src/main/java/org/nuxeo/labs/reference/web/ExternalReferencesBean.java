@@ -6,6 +6,7 @@ import java.io.Serializable;
 import org.jboss.seam.ScopeType;
 import org.jboss.seam.annotations.Name;
 import org.jboss.seam.annotations.Scope;
+import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.api.DocumentModelList;
 import org.nuxeo.labs.reference.operation.AbstractExternalReferenceOperation;
 
@@ -23,7 +24,7 @@ public class ExternalReferencesBean extends AbstractExternalReferenceOperation i
         return getExternalReferenceInfo(DocumentId, null);
     }
 
-    public DocumentModelList updateHippoRefsOfNuxeoDocumentBean(String DocumentId) throws IOException{
+    public DocumentModelList updateHippoRefsOfNuxeoDocumentBean(DocumentModel DocumentId) throws IOException{
         return updateHippoRefsOfNuxeoDocument(DocumentId);
     }
 

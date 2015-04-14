@@ -302,30 +302,31 @@ public class AbstractExternalReferenceOperation extends
     }
 
     protected DocumentModelList getHippoRefAndPersistThemForNuxeoDocument(
-            String documentUID) throws IOException {
+            DocumentModel documentUID) throws IOException {
 
         DirectoryService dirService = Framework.getLocalService(DirectoryService.class);
         Session dirSession = dirService.open(ExternalReferenceConstant.EXTERNAL_REF_DIRECTORY);
-
-        List<String> hippoRefs = getHippoRefsForDocument(documentUID);
+        CoreSession coreSession = documentUID.getCoreSession();
+        DocumentModelList proxies = coreSession.getProxies(documentUID.getRef(), null);
         DocumentModelList newRefs = new DocumentModelListImpl();
-        for (String hippoRef : hippoRefs) {
-            newRefs.add(addExternalRef(dirSession, documentUID, null, hippoRef));
+
+        if(proxies.size()>0){
+            for(DocumentModel proxy: proxies){
+                List<String> hippoRefs = getHippoRefsForDocument(proxy.getId());
+                for (String hippoRef : hippoRefs) {
+                    newRefs.add(addExternalRef(dirSession,documentUID.getId() , proxy.getId(), hippoRef));
+                }
+            }
         }
         dirSession.close();
         return newRefs;
     }
 
-    protected void addAllHippoRefs() throws IOException {
-        List<String> referencedNuxeoDocuments = getAllDocumentRefsInHippo();
-        for (String referencedNuxeoDocument : referencedNuxeoDocuments) {
-            getHippoRefAndPersistThemForNuxeoDocument(referencedNuxeoDocument);
-        }
-    }
+
 
     protected DocumentModelList updateHippoRefsOfNuxeoDocument(
-            String documentUID) throws IOException {
-        removeExternalReference(documentUID, null);
+            DocumentModel documentUID) throws IOException {
+        removeExternalReference(documentUID.getId(), null);
         return getHippoRefAndPersistThemForNuxeoDocument(documentUID);
 
     }
