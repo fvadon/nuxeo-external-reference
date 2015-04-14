@@ -6,10 +6,27 @@
   xmlns:c="http://java.sun.com/jstl/core"
   xmlns:nxp="http://nuxeo.org/nxweb/pdf"
   id="#{widget.id}">
-  <div>
-    <c:forEach var="externalRef" items="#{externalReferences.updateHippoRefsOfNuxeoDocument(currentDocument.id)}" varStatus="status">
-      <h:outputText value="#{externalRef.usagedirectory.externalRef}"
-        title="#{externalRef.usagedirectory.externalRef}" />
-    </c:forEach>
-  </div>
+
+<div class="metadata_block">
+		<span class="widgetLabel summaryTitle">External References</span>
+		<c:set var="externalRefs" value="#{externalReferences.getExternalReferences(currentDocument.id)}" scope="request" />
+		<c:if test="${externalRefs.totalSize()>0}">
+			<c:forEach var="externalRef"
+				items="#{externalRefs}"
+				varStatus="status">
+				<div>
+					<h:outputLink value="#{externalRef.usagedirectory.externalRef}" >
+						#{externalRef.usagedirectory.externalRef}
+					</h:outputLink>
+				
+				</div>
+			</c:forEach>
+		</c:if>
+		<c:if test="${externalRefs.totalSize()==0}">
+			<div>
+				<h:outputText value="No external reference"/>
+			</div>
+		</c:if>
+			
+	</div>
 </f:subview>
