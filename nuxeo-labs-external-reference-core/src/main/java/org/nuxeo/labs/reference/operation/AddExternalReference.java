@@ -17,7 +17,7 @@ import org.nuxeo.ecm.core.api.DocumentModel;
  * @author fvadon
  */
 @Operation(id = AddExternalReference.ID, category = Constants.CAT_SERVICES, label = "Add External Reference", description = "Will store the string Reference for the document UUID passed as a parameter. If the document is a proxy, it will automatically add also the source document. Returns the created entry as a document model (null if nothing is created). This op should probably be run as an Admin, as it needs to manage directories and read documents")
-public class AddExternalReference extends AbstractExternalReferenceOperation {
+public class AddExternalReference extends AbstractExternalReferenceActions {
 
     public static final String ID = "AddExternalReference";
 

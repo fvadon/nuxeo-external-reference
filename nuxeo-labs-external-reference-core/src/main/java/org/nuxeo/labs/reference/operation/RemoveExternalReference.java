@@ -16,7 +16,7 @@ import org.nuxeo.ecm.core.api.CoreSession;
  * @author fvadon
  */
 @Operation(id=RemoveExternalReference.ID, category=Constants.CAT_SERVICES, label="RemoveExternalReference", description="Remove the entries corresponding the tuple formed by ExternalRef and DocumentUID, if only of them is provided, then remove all entries with that item. SHould probably be run as an Admin, not check is done on permissions")
-public class RemoveExternalReference extends AbstractExternalReferenceOperation{
+public class RemoveExternalReference extends AbstractExternalReferenceActions{
 
     public static final String ID = "RemoveExternalReference";
 
