@@ -6,7 +6,7 @@ import org.jboss.seam.ScopeType;
 import org.jboss.seam.annotations.Name;
 import org.jboss.seam.annotations.Scope;
 import org.nuxeo.ecm.core.api.DocumentModelList;
-import org.nuxeo.labs.reference.operation.AbstractExternalReferenceOperation;
+import org.nuxeo.labs.reference.operation.AbstractExternalReferenceActions;
 
 
 /**
@@ -16,13 +16,11 @@ import org.nuxeo.labs.reference.operation.AbstractExternalReferenceOperation;
  */
 @Name("externalReferences")
 @Scope(ScopeType.CONVERSATION)
-public class ExternalReferencesBean extends AbstractExternalReferenceOperation implements Serializable {
+public class ExternalReferencesBean extends AbstractExternalReferenceActions implements Serializable {
 
     public DocumentModelList getExternalReferences(String DocumentId){
         return getExternalReferenceInfo(DocumentId, null);
     }
-
-
 
     private static final long serialVersionUID = 1L;
 

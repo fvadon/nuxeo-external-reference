@@ -35,7 +35,7 @@ import com.google.inject.Inject;
 @Features({ PlatformFeature.class, CoreFeature.class,
     EmbeddedAutomationServerFeature.class })
 @Deploy({ "org.nuxeo.labs.reference" })
-public class ExternalRefTest {
+public class ExternalRefTest extends AbstractExternalReferenceActions{
 
     @Inject
     CoreSession session;

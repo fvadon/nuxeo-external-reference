@@ -36,4 +36,6 @@
   <xs:element name="externalRef" type="xs:string"/>
   <xs:element name="liveDocUID" type="xs:string"/>
   <xs:element name="proxyUID" type="xs:string"/>
+  <xs:element name="externalReferenceLabel" type="xs:string"/>
+  <xs:element name="externalSource" type="xs:string"/>
 </xs:schema>

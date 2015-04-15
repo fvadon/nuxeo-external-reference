@@ -17,7 +17,7 @@ import org.nuxeo.ecm.core.api.DocumentModelList;
  * @author fvadon
  */
 @Operation(id=GetExternalReferenceInfo.ID, category=Constants.CAT_SERVICES, label="GetExternalReferenceInfo", description="Get the list of entries for any combination of External Reference and DocumentUID")
-public class GetExternalReferenceInfo extends AbstractExternalReferenceOperation {
+public class GetExternalReferenceInfo extends AbstractExternalReferenceActions {
 
     public static final String ID = "GetExternalReferenceInfo";
 

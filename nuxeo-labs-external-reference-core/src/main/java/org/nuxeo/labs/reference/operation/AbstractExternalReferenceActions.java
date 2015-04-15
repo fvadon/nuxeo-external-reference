@@ -4,7 +4,6 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.nuxeo.ecm.automation.core.operations.services.directory.AbstractDirectoryOperation;
 import org.nuxeo.ecm.core.api.CoreSession;
 import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.api.DocumentModelList;
@@ -14,8 +13,7 @@ import org.nuxeo.ecm.directory.api.DirectoryService;
 import org.nuxeo.labs.reference.constants.ExternalReferenceConstant;
 import org.nuxeo.runtime.api.Framework;
 
-public class AbstractExternalReferenceOperation extends
-        AbstractDirectoryOperation {
+public abstract class AbstractExternalReferenceActions {
 
     /**
      *
@@ -194,13 +192,16 @@ public class AbstractExternalReferenceOperation extends
                         externalReference);
             }
             if (documentUID != null) {
-                filter.put(ExternalReferenceConstant.EXTERNAL_LIVEDOC_UID_FIELD,
+                filter.put(
+                        ExternalReferenceConstant.EXTERNAL_LIVEDOC_UID_FIELD,
                         documentUID);
             }
             list = dirSession.query(filter);
         }
+        dirSession.close();
 
         return list;
 
     }
 }
+
