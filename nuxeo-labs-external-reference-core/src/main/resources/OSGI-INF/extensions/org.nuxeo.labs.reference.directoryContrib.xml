@@ -1,31 +1,35 @@
 <?xml version="1.0"?>
 <component name="org.nuxeo.labs.reference.directory">
 
-  <extension target="org.nuxeo.ecm.core.schema.TypeService" point="schema">
-    <schema name="usagedirectory" src="schemas/usagedirectory.xsd"/>
-  </extension>
+	<extension target="org.nuxeo.ecm.core.schema.TypeService"
+		point="schema">
+		<schema name="usagedirectory" src="schemas/usagedirectory.xsd" />
+	</extension>
 
-  <extension point="directories" target="org.nuxeo.ecm.directory.sql.SQLDirectoryFactory">
+	<extension point="directories"
+		target="org.nuxeo.ecm.directory.sql.SQLDirectoryFactory">
 
-    <directory name="extUsage">
-      <schema>usagedirectory</schema>
-      <dataSource>java:/nxsqldirectory</dataSource>
-      <cacheTimeout>3600</cacheTimeout>
-      <cacheMaxSize>1000</cacheMaxSize>
-      <table>usagedirectory</table>
-      <idField>directoryId</idField>
-      <autoincrementIdField>true</autoincrementIdField>
-      <createTablePolicy>on_missing_columns</createTablePolicy>
-      <permissions>
-            <permission name="Read">
-                <group>members</group>
-            </permission>
-            <permission name="Write">
-                <group>members</group>
-            </permission>
-        </permissions>
-    </directory>
-  </extension>
-  
-  
+		<directory name="extUsage">
+			<schema>usagedirectory</schema>
+			<dataSource>java:/nxsqldirectory</dataSource>
+			<cacheTimeout>3600</cacheTimeout>
+			<cacheMaxSize>1000</cacheMaxSize>
+			<table>usagedirectory</table>
+			<idField>directoryId</idField>
+			<autoincrementIdField>true</autoincrementIdField>
+			<createTablePolicy>on_missing_columns</createTablePolicy>
+			<permissions>
+				<permission name="Read">
+					<group>members</group>
+					<group>administrators</group>
+				</permission>
+				<permission name="Write">
+					<group>members</group>
+					<group>administrators</group>
+				</permission>
+			</permissions>
+		</directory>
+	</extension>
+
+
 </component>
