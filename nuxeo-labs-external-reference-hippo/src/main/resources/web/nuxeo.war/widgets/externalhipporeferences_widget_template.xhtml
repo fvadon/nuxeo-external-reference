@@ -1,0 +1,46 @@
+<f:subview xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:a4j="http://richfaces.org/a4j"
+  xmlns:nxu="http://nuxeo.org/nxweb/util"
+  xmlns:nxdir="http://nuxeo.org/nxdirectory"
+  xmlns:c="http://java.sun.com/jstl/core"
+  xmlns:nxp="http://nuxeo.org/nxweb/pdf"
+  id="#{widget.id}">
+<div class="metadata_block">
+		<span class="widgetLabel summaryTitle">External References</span>
+		<c:set var="externalRefs" value="#{externalReferencesHippo.updateHippoRefsOfNuxeoDocumentBean(currentDocument)}" scope="request" />
+		<c:if test="${externalRefs.totalSize()>0}">
+			<table class="dataOutput">
+			  <thead>
+			    <tr>
+			        <th dir="auto">Reference link
+			        </th>
+			        <th dir="auto">Source
+			        </th>
+			        <th dir="auto">Version
+			        </th>
+			    </tr>
+			  </thead>
+
+			<nxu:repeat var="externalRef"
+				items="#{externalRefs}">
+				<tr class="dataRowEven">
+				    <td dir="auto">
+					<h:outputLink value="#{externalRef.usagedirectory.externalRef}" target="_new" >
+						#{externalRef.usagedirectory.externalReferenceLabel}
+					</h:outputLink>
+				</td>
+					<td>#{externalRef.usagedirectory.externalSource}</td>
+					<td>#{externalReferences.getExternalReferenceVersion(externalRef)}</td>
+				</tr>
+			</nxu:repeat>
+		</table>
+		</c:if>
+		<c:if test="${externalRefs.totalSize()==0}">
+			<div>
+				<h:outputText value="No external reference"/>
+			</div>
+		</c:if>
+			
+	</div>
+</f:subview>

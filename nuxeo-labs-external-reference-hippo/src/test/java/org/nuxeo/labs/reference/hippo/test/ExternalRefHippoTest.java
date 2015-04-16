@@ -64,23 +64,28 @@ public class ExternalRefHippoTest extends AbstractExternalReferenceHippoActions{
         session.save();
         docToPublish = session.getDocument(docToPublish.getRef());
 
-
-
     }
 
 
     @Test
     public void hippoRefsTest() throws IOException {
         String nuxeoUID= "ccd5a6f4-2440-4346-a021-36d2b613845c";
-        List<String> hippoRefs = getHippoRefsForDocument(nuxeoUID);
+        List<String> hippoRefs = getRefsForDocumentFromHippo(nuxeoUID);
         assertNotNull(hippoRefs);
 
-        List<String> nuxeoUIDs = getAllDocumentRefsInHippo();
+        List<String> nuxeoUIDs = getAllDocumentRefsFromHippo();
         assertNotNull(nuxeoUIDs);
 
+        //Test correctiong the hippo link that is incorrect
+        String wrongLink = "http://www.chi.test.us.onehippo.com/nuxeo/news/2014/10/gogreen-nominated-for-unef-sustainable-business-award.html";
+        String correctLink = "http://www.chi.test.us.onehippo.com/news/2014/10/gogreen-nominated-for-unef-sustainable-business-award.html";
+        assertEquals(correctLink,correctHippoLink(wrongLink));
+        assertEquals(correctLink,correctHippoLink(correctLink));
 
-
-
+        //Test Label Extraction from Ref
+        String ref = "http://www.chi.test.us.onehippo.com/nuxeo/news/2014/10/gogreen-nominated-for-unef-sustainable-business-award.html";
+        String label= "gogreen nominated for unef sustainable business award";
+        assertEquals(label,extractHippoLabelFromLink(ref));
 
     }
 

@@ -31,7 +31,7 @@ public class AbstractExternalReferenceHippoActions extends
      * @return
      * @throws IOException
      */
-    protected List<String> getAllDocumentRefsInHippo() throws IOException {
+    protected List<String> getAllDocumentRefsFromHippo() throws IOException {
         HttpURLConnection http = null;
         String restResult = "";
         List<String> result = new ArrayList<String>();
@@ -65,14 +65,14 @@ public class AbstractExternalReferenceHippoActions extends
     }
 
     /**
-     * Get the list of all Hippo references for one nuxeo document
+     * Get the list of all Hippo references for one nuxeo document from Hippo
      *
      * @param documentUID
      * @return
      * @throws IOException
      */
 
-    protected List<String> getHippoRefsForDocument(String documentUID)
+    protected List<String> getRefsForDocumentFromHippo(String documentUID)
             throws IOException {
 
         HttpURLConnection http = null;
@@ -110,7 +110,7 @@ public class AbstractExternalReferenceHippoActions extends
 
     }
 
-    protected DocumentModelList getHippoRefAndPersistThemForNuxeoDocument(
+    protected DocumentModelList getAndStoreNuxeoDocumentRefsFromHippo(
             DocumentModel documentUID) throws IOException {
 
         DirectoryService dirService = Framework.getLocalService(DirectoryService.class);
@@ -123,11 +123,11 @@ public class AbstractExternalReferenceHippoActions extends
 
             if (proxies.size() > 0) {
                 for (DocumentModel proxy : proxies) {
-                    List<String> hippoRefs = getHippoRefsForDocument(proxy.getId());
+                    List<String> hippoRefs = getRefsForDocumentFromHippo(proxy.getId());
                     for (String hippoRef : hippoRefs) {
                         newRefs.add(addExternalRef(dirSession,
-                                documentUID.getId(), proxy.getId(), hippoRef,
-                                null, null));
+                                documentUID.getId(), proxy.getId(), correctHippoLink(hippoRef),
+                                extractHippoLabelFromLink(hippoRef), "Hippo US"));
                     }
                 }
             }
@@ -140,8 +140,35 @@ public class AbstractExternalReferenceHippoActions extends
     protected DocumentModelList updateHippoRefsOfNuxeoDocument(
             DocumentModel documentUID) throws IOException {
         removeExternalReference(documentUID.getId(), null);
-        return getHippoRefAndPersistThemForNuxeoDocument(documentUID);
+        return getAndStoreNuxeoDocumentRefsFromHippo(documentUID);
 
     }
+
+    /**
+     * Because the Hippo custom rest APIs has a bug
+     *
+     * @param wrongLink
+     * @return
+     */
+    protected String correctHippoLink(String wrongLink) {
+        String correctedLink = wrongLink;
+        // Choosing a string to remove that should exclude other possible use of
+        // Nuxeo in the name
+        String toBeRemoved = ".com/nuxeo";
+        if (correctedLink.contains(toBeRemoved)) {
+            return correctedLink.replace(toBeRemoved, ".com");
+        } else {
+            return correctedLink;
+        }
+    }
+
+    /**
+     * Inventing a consistent label from the actual Ref
+     * @param link
+     * @return a Label
+     */
+   protected String extractHippoLabelFromLink(String link){
+       return link.substring(link.lastIndexOf("/")+1,link.length()).replace("-", " ").replace(".html","");
+   }
 
 }
