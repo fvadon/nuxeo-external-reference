@@ -34,6 +34,12 @@ public class AddExternalReference extends AbstractExternalReferenceActions {
     @Param(name = "DocumentUID", required = true)
     protected String DocumentUID;
 
+    @Param(name = "referenceLabel", required = false)
+    protected String referenceLabel;
+
+    @Param(name = "externalSource", required = false)
+    protected String externalSource;
+
     @Param(name = "AddEvenIfAlreadyExist", required = false, values = "false")
     protected boolean AddEvenIfAlreadyExist = false;
 
@@ -43,7 +49,7 @@ public class AddExternalReference extends AbstractExternalReferenceActions {
 
 
         DocumentModel dm = addExternalRef(coreSession, DocumentUID,
-                ExternalReference, AddEvenIfAlreadyExist);
+                ExternalReference,referenceLabel,externalSource, AddEvenIfAlreadyExist);
 
         return dm;
 

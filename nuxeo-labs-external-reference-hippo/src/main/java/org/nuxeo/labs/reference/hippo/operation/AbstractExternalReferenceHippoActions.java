@@ -22,7 +22,8 @@ import org.nuxeo.labs.reference.hippo.constants.ExternalReferenceConstantHippo;
 import org.nuxeo.labs.reference.operation.AbstractExternalReferenceActions;
 import org.nuxeo.runtime.api.Framework;
 
-public class AbstractExternalReferenceHippoActions extends AbstractExternalReferenceActions{
+public class AbstractExternalReferenceHippoActions extends
+        AbstractExternalReferenceActions {
 
     /**
      * Get a list of all Nuxeo documents references in Hippo from Hippo
@@ -109,29 +110,32 @@ public class AbstractExternalReferenceHippoActions extends AbstractExternalRefer
 
     }
 
-
     protected DocumentModelList getHippoRefAndPersistThemForNuxeoDocument(
             DocumentModel documentUID) throws IOException {
 
         DirectoryService dirService = Framework.getLocalService(DirectoryService.class);
         Session dirSession = dirService.open(ExternalReferenceConstant.EXTERNAL_REF_DIRECTORY);
-        CoreSession coreSession = documentUID.getCoreSession();
-        DocumentModelList proxies = coreSession.getProxies(documentUID.getRef(), null);
-        DocumentModelList newRefs = new DocumentModelListImpl();
+        try {
+            CoreSession coreSession = documentUID.getCoreSession();
+            DocumentModelList proxies = coreSession.getProxies(
+                    documentUID.getRef(), null);
+            DocumentModelList newRefs = new DocumentModelListImpl();
 
-        if(proxies.size()>0){
-            for(DocumentModel proxy: proxies){
-                List<String> hippoRefs = getHippoRefsForDocument(proxy.getId());
-                for (String hippoRef : hippoRefs) {
-                    newRefs.add(addExternalRef(dirSession,documentUID.getId() , proxy.getId(), hippoRef));
+            if (proxies.size() > 0) {
+                for (DocumentModel proxy : proxies) {
+                    List<String> hippoRefs = getHippoRefsForDocument(proxy.getId());
+                    for (String hippoRef : hippoRefs) {
+                        newRefs.add(addExternalRef(dirSession,
+                                documentUID.getId(), proxy.getId(), hippoRef,
+                                null, null));
+                    }
                 }
             }
+            return newRefs;
+        } finally {
+            dirSession.close();
         }
-        dirSession.close();
-        return newRefs;
     }
-
-
 
     protected DocumentModelList updateHippoRefsOfNuxeoDocument(
             DocumentModel documentUID) throws IOException {
