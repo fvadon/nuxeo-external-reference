@@ -131,6 +131,7 @@ public class AbstractExternalReferenceHippoActions extends
                     }
                 }
             }
+            updateReferenceInfoForReporting(documentUID);
             return newRefs;
         } finally {
             dirSession.close();
