@@ -4,8 +4,10 @@ import java.io.IOException;
 import java.io.Serializable;
 
 import org.jboss.seam.ScopeType;
+import org.jboss.seam.annotations.In;
 import org.jboss.seam.annotations.Name;
 import org.jboss.seam.annotations.Scope;
+import org.nuxeo.ecm.core.api.CoreSession;
 import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.api.DocumentModelList;
 import org.nuxeo.labs.reference.hippo.operation.AbstractExternalReferenceHippoActions;
@@ -20,8 +22,11 @@ import org.nuxeo.labs.reference.hippo.operation.AbstractExternalReferenceHippoAc
 @Scope(ScopeType.CONVERSATION)
 public class ExternalReferencesHippoBean extends AbstractExternalReferenceHippoActions implements Serializable {
 
+    @In(create = true, required = false)
+    protected transient CoreSession documentManager;
+
     public DocumentModelList updateHippoRefsOfNuxeoDocumentBean(DocumentModel DocumentId) throws IOException{
-        return updateHippoRefsOfNuxeoDocument(DocumentId);
+        return updateHippoRefsOfNuxeoDocument(documentManager,DocumentId);
     }
 
     private static final long serialVersionUID = 1L;

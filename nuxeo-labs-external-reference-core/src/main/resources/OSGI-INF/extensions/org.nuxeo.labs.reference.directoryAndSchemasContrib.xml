@@ -6,6 +6,19 @@
 		<schema name="usagedirectory" src="schemas/usagedirectory.xsd" />
 	</extension>
 
+	<extension target="org.nuxeo.ecm.core.schema.TypeService"
+		point="schema">
+		<schema name="externalreferencereporting" src="schemas/externalreferencereporting.xsd" />
+	</extension>
+	
+	<extension point="doctype" target="org.nuxeo.ecm.core.schema.TypeService">
+    	<facet name="ExternalReferenceReporting">
+        	<schema name="externalreferencereporting" />
+    	</facet>
+	</extension>
+	
+	
+
 	<extension point="directories"
 		target="org.nuxeo.ecm.directory.sql.SQLDirectoryFactory">
 

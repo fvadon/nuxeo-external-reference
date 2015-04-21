@@ -1,15 +1,23 @@
 package org.nuxeo.labs.reference.operation;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import org.nuxeo.ecm.core.api.ClientException;
 import org.nuxeo.ecm.core.api.CoreSession;
 import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.api.DocumentModelList;
 import org.nuxeo.ecm.core.api.IdRef;
+import org.nuxeo.ecm.core.api.UnrestrictedSessionRunner;
+import org.nuxeo.ecm.core.versioning.VersioningService;
 import org.nuxeo.ecm.directory.Session;
 import org.nuxeo.ecm.directory.api.DirectoryService;
+import org.nuxeo.ecm.platform.audit.service.NXAuditEventsService;
+import org.nuxeo.ecm.platform.dublincore.listener.DublinCoreListener;
+import org.nuxeo.ecm.platform.ec.notification.NotificationConstants;
 import org.nuxeo.labs.reference.constants.ExternalReferenceConstant;
 import org.nuxeo.runtime.api.Framework;
 
@@ -75,16 +83,20 @@ public abstract class AbstractExternalReferenceActions {
                         dm = addExternalRef(dirSession, documentUID, null,
                                 externalReference, referenceLabel,
                                 externalSource);
+                        // Update stats
+                        updateReferenceInfoForReporting(docToAdd);
                     } else {
                         // It's a proxy get the live doc
-                        DocumentModel documentLive = coreSession.getSourceDocument(new IdRef(
+                        DocumentModel liveDocument = coreSession.getSourceDocument(new IdRef(
                                 documentUID));
-                        if (documentLive.isVersion()) {
-                            documentLive = coreSession.getSourceDocument(documentLive.getRef());
+                        if (liveDocument.isVersion()) {
+                            liveDocument = coreSession.getSourceDocument(liveDocument.getRef());
                         }
-                        dm = addExternalRef(dirSession, documentLive.getId(),
+                        dm = addExternalRef(dirSession, liveDocument.getId(),
                                 documentUID, externalReference, referenceLabel,
                                 externalSource);
+                        // Update stats
+                        updateReferenceInfoForReporting(liveDocument);
                     }
                 }
             }
@@ -136,16 +148,37 @@ public abstract class AbstractExternalReferenceActions {
      * then removes all occurrences. Making the assumption that they are not
      * both null... It will check DocumentUID both as live document and proxy
      *
+     * @param coreSession
      * @param documentUID
      * @param externalReference
      */
-    protected void removeExternalReference(String documentUID,
-            String externalReference) {
+    protected void removeExternalReference(CoreSession coreSession,
+            String documentUID, String externalReference) {
         DirectoryService dirService = Framework.getLocalService(DirectoryService.class);
         Session dirSession = dirService.open(ExternalReferenceConstant.EXTERNAL_REF_DIRECTORY);
-        try {
-            Map<String, Serializable> filter = new HashMap<String, Serializable>();
+        Map<String, Serializable> filter = new HashMap<String, Serializable>();
 
+        List<String> previousDocumentUIDs = new ArrayList<String>();
+
+        try {
+
+            // Storing the list of UID that will be removed to updated the stats
+            // when documentUID is null
+            if (documentUID == null) {
+                filter.put(ExternalReferenceConstant.EXTERNAL_REF_FIELD,
+                        externalReference);
+                DocumentModelList previousValues = dirSession.query(filter);
+
+                for (DocumentModel entry : previousValues) {
+                    previousDocumentUIDs.add((String) entry.getPropertyValue(ExternalReferenceConstant.EXTERNAL_REF_SCHEMA
+                            + ":"
+                            + ExternalReferenceConstant.EXTERNAL_LIVEDOC_UID_FIELD));
+                }
+            } else {
+                previousDocumentUIDs.add(documentUID);
+            }
+
+            filter.clear();
             // Look for lives doc references
             if (documentUID != null) {
 
@@ -177,6 +210,28 @@ public abstract class AbstractExternalReferenceActions {
 
             for (DocumentModel entry : list) {
                 dirSession.deleteEntry(entry);
+            }
+
+            // Updating the stats
+            for(String previousDocumentUID:previousDocumentUIDs) {
+            DocumentModel document = coreSession.getDocument(new IdRef(
+                    previousDocumentUID));
+            if (document != null) {
+                if (!document.isProxy()) {
+                    // Update stats
+                    updateReferenceInfoForReporting(document);
+                } else {
+                    // It's a proxy get the live doc
+                    document = coreSession.getSourceDocument(new IdRef(
+                            previousDocumentUID));
+                    if (document.isVersion()) {
+                        document = coreSession.getSourceDocument(document.getRef());
+                    }
+                    // Update stats
+                    updateReferenceInfoForReporting(document);
+                }
+            }
+
             }
         } finally {
             dirSession.close();
@@ -260,5 +315,80 @@ public abstract class AbstractExternalReferenceActions {
 
         return referencedDocument.getVersionLabel();
 
+    }
+
+    protected DocumentModel updateReferenceInfoForReporting(
+            DocumentModel document) {
+
+        // Store the refs
+        CoreSession session = document.getCoreSession();
+
+        new UnrestrictedSessionRunner(session) {
+
+            @Override
+            public void run() throws ClientException {
+
+                DocumentModel temp = document;
+                // values can exist multiple time, we have to reset the full
+                // schema
+                temp.removeFacet(ExternalReferenceConstant.EXTERNAL_REFERENCE_REPORTING_FACET);
+                // Get the external ref values
+                DocumentModelList externalRefs = getExternalReferenceInfo(
+                        temp.getId(), null);
+                // De-normalize the values into string lists
+                if (externalRefs.size() > 0) {
+                    List<String> externalRefsStringList = new ArrayList<String>();
+                    List<String> externalRefsLabelsStringList = new ArrayList<String>();
+                    List<String> externalExternalSourcesStringList = new ArrayList<String>();
+                    for (DocumentModel externalRef : externalRefs) {
+                        externalRefsStringList.add((String) externalRef.getPropertyValue(ExternalReferenceConstant.EXTERNAL_REF_SCHEMA
+                                + ":"
+                                + ExternalReferenceConstant.EXTERNAL_REF_FIELD));
+                        externalRefsLabelsStringList.add((String) externalRef.getPropertyValue(ExternalReferenceConstant.EXTERNAL_REF_SCHEMA
+                                + ":"
+                                + ExternalReferenceConstant.EXTERNAL_REFERENCE_LABEL_FIELD));
+                        externalExternalSourcesStringList.add((String) externalRef.getPropertyValue(ExternalReferenceConstant.EXTERNAL_REF_SCHEMA
+                                + ":"
+                                + ExternalReferenceConstant.EXTERNAL_SOURCE_FIELD));
+                    }
+                    temp.addFacet(ExternalReferenceConstant.EXTERNAL_REFERENCE_REPORTING_FACET);
+
+                    temp.setPropertyValue(
+                            ExternalReferenceConstant.EXTERNAL_REFERENCE_REPORTING_SCHEMA
+                                    + ":"
+                                    + ExternalReferenceConstant.EXTERNAL_REFERENCE_REPORTING_REFS,
+                            (Serializable) externalRefsStringList);
+                    temp.setPropertyValue(
+                            ExternalReferenceConstant.EXTERNAL_REFERENCE_REPORTING_SCHEMA
+                                    + ":"
+                                    + ExternalReferenceConstant.EXTERNAL_REFERENCE_REPORTING_LABELS,
+                            (Serializable) externalRefsLabelsStringList);
+                    temp.setPropertyValue(
+                            ExternalReferenceConstant.EXTERNAL_REFERENCE_REPORTING_SCHEMA
+                                    + ":"
+                                    + ExternalReferenceConstant.EXTERNAL_REFERENCE_REPORTING_SOURCES,
+                            (Serializable) externalExternalSourcesStringList);
+
+                }
+                // Disabling events
+                disableEvents(temp);
+                temp = session.saveDocument(temp);
+
+            }
+
+        }.runUnrestricted();
+        DocumentModel finalDocument = session.getDocument(new IdRef(
+                document.getId()));
+
+        return finalDocument;
+
+    }
+
+    protected static void disableEvents(final DocumentModel doc) {
+        doc.putContextData(DublinCoreListener.DISABLE_DUBLINCORE_LISTENER, true);
+        doc.putContextData(NotificationConstants.DISABLE_NOTIFICATION_SERVICE,
+                true);
+        doc.putContextData(NXAuditEventsService.DISABLE_AUDIT_LOGGER, true);
+        doc.putContextData(VersioningService.DISABLE_AUTO_CHECKOUT, true);
     }
 }

@@ -138,8 +138,8 @@ public class AbstractExternalReferenceHippoActions extends
     }
 
     protected DocumentModelList updateHippoRefsOfNuxeoDocument(
-            DocumentModel documentUID) throws IOException {
-        removeExternalReference(documentUID.getId(), null);
+            CoreSession coreSession, DocumentModel documentUID) throws IOException {
+        removeExternalReference(coreSession,documentUID.getId(), null);
         return getAndStoreNuxeoDocumentRefsFromHippo(documentUID);
 
     }

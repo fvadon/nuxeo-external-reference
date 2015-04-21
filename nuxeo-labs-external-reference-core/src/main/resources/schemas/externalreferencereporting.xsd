@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:nxs="http://www.nuxeo.org/ecm/project/schemas/usagedirectory" targetNamespace="http://www.nuxeo.org/ecm/project/schemas/usagedirectory">  
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:nxs="http://www.nuxeo.org/ecm/project/schemas/externalreferencereporting" targetNamespace="http://www.nuxeo.org/ecm/project/schemas/externalreferencereporting">  
   <!-- helper XSD definitions for list types -->  
   <xs:complexType name="content"> 
     <xs:sequence> 
@@ -32,10 +32,7 @@
       <xs:element name="item" type="nxs:content" minOccurs="0" maxOccurs="unbounded"/> 
     </xs:sequence> 
   </xs:complexType>  
-  <xs:element name="directoryId" type="xs:integer"/>
-  <xs:element name="externalRef" type="xs:string"/>
-  <xs:element name="liveDocUID" type="xs:string"/>
-  <xs:element name="proxyUID" type="xs:string"/>
-  <xs:element name="externalReferenceLabel" type="xs:string"/>
-  <xs:element name="externalSource" type="xs:string"/>
+  <xs:element name="externalrefs" type="nxs:stringList"/>
+  <xs:element name="externalreferencelabels" type="nxs:stringList"/>
+  <xs:element name="externalsources" type="nxs:stringList"/>
 </xs:schema>

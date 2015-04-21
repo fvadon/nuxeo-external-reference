@@ -10,11 +10,13 @@ import org.nuxeo.ecm.automation.OperationChain;
 import org.nuxeo.ecm.automation.OperationContext;
 import org.nuxeo.ecm.automation.OperationException;
 import org.nuxeo.ecm.automation.core.operations.FetchContextDocument;
+import org.nuxeo.ecm.automation.core.operations.document.CreateVersion;
 import org.nuxeo.ecm.automation.core.operations.document.PublishDocument;
 import org.nuxeo.ecm.automation.test.EmbeddedAutomationServerFeature;
 import org.nuxeo.ecm.core.api.CoreSession;
 import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.api.DocumentModelList;
+import org.nuxeo.ecm.core.api.IdRef;
 import org.nuxeo.ecm.core.test.CoreFeature;
 import org.nuxeo.ecm.directory.Session;
 import org.nuxeo.ecm.directory.api.DirectoryService;
@@ -87,7 +89,7 @@ public class ExternalRefTest extends AbstractExternalReferenceActions {
         initChain.add(PublishDocument.ID).set("target", section.getId());
         publishedDoc = (DocumentModel) service.run(ctx, initChain);
         assertNotNull(publishedDoc);
-        //Modifying the version number of docToPublish
+        // Modifying the version number of docToPublish
         docToPublish.setPropertyValue("dc:description", "new description");
         session.saveDocument(docToPublish);
 
@@ -113,7 +115,9 @@ public class ExternalRefTest extends AbstractExternalReferenceActions {
             DocumentModel dm = (DocumentModel) service.run(ctx, chain);
             assertNotNull(dm);
             assertEquals("2", dm.getId());
-            assertNull(dirSession.getEntry("1").getProperty(ExternalReferenceConstant.EXTERNAL_REF_SCHEMA, ExternalReferenceConstant.EXTERNAL_PROXY_UID_FIELD));
+            assertNull(dirSession.getEntry("1").getProperty(
+                    ExternalReferenceConstant.EXTERNAL_REF_SCHEMA,
+                    ExternalReferenceConstant.EXTERNAL_PROXY_UID_FIELD));
             // Testing we can add an existing ref if we want.
             OperationChain chain2 = new OperationChain("testAddExisitingEntry");
             // entry 3 (1bis)
@@ -152,10 +156,11 @@ public class ExternalRefTest extends AbstractExternalReferenceActions {
             // should be 4 because there is also a version using this.
             assertEquals(4, dml.size());
 
-           // Testing get ref version label
-            assertEquals("0.1",getReferenceVersionLabel(session, dirSession.getEntry("4")));
-            assertEquals("0.1+",getReferenceVersionLabel(session, dirSession.getEntry("1")));
-
+            // Testing get ref version label
+            assertEquals("0.1",
+                    getReferenceVersionLabel(session, dirSession.getEntry("4")));
+            assertEquals("0.1+",
+                    getReferenceVersionLabel(session, dirSession.getEntry("1")));
 
             // Testing deletion from Proxy ID
             OperationChain chain4 = new OperationChain("testAddProxy");
@@ -200,10 +205,53 @@ public class ExternalRefTest extends AbstractExternalReferenceActions {
                     dirSession.getEntry("5").getPropertyValue(
                             "usagedirectory:externalReferenceLabel"));
 
-
         } finally {
             dirSession.close();
         }
     }
 
+    @Test
+    public void storeDirectoryInfoOnDocumentTest() throws OperationException {
+        DocumentModel document = session.createDocumentModel("/Folder",
+                "docToPublish", "File");
+        document.setPropertyValue("dc:title", "File");
+        document = session.createDocument(docToPublish);
+        session.saveDocument(document);
+
+        OperationContext ctx = new OperationContext(session);
+
+        ctx.setInput(document);
+        OperationChain initChain = new OperationChain("testStoreDirectoryInfo");
+        initChain.add(FetchContextDocument.ID);
+        initChain.add(CreateVersion.ID).set("increment", "Major").set("saveDocument",true);
+        // entry 1
+        initChain.add(AddExternalReference.ID).set("ExternalReference",
+                "someExternalReference").set("DocumentUID",
+                document.getId());
+        initChain.add(AddExternalReference.ID).set("ExternalReference",
+                "someOtherReference").set("DocumentUID",
+                document.getId());
+        service.run(ctx, initChain);
+        document= session.getDocument(new IdRef(document.getId()));
+        assertEquals("1.0",document.getVersionLabel());
+        assertTrue(document.hasFacet(ExternalReferenceConstant.EXTERNAL_REFERENCE_REPORTING_FACET));
+        assertEquals(2,((String[]) document.getPropertyValue(ExternalReferenceConstant.EXTERNAL_REFERENCE_REPORTING_SCHEMA
+                + ":"
+                + ExternalReferenceConstant.EXTERNAL_REFERENCE_REPORTING_REFS)).length);
+
+        //Testing update on remove works
+        removeExternalReference(session, null, "someExternalReference");
+        document= session.getDocument(new IdRef(document.getId()));
+        assertEquals("1.0",document.getVersionLabel());
+        assertTrue(document.hasFacet(ExternalReferenceConstant.EXTERNAL_REFERENCE_REPORTING_FACET));
+        assertEquals(1,((String[]) document.getPropertyValue(ExternalReferenceConstant.EXTERNAL_REFERENCE_REPORTING_SCHEMA
+                + ":"
+                + ExternalReferenceConstant.EXTERNAL_REFERENCE_REPORTING_REFS)).length);
+        //Testinf the schema is removed if not ref.
+        removeExternalReference(session, document.getId(),null);
+        document= session.getDocument(new IdRef(document.getId()));
+        assertEquals("1.0",document.getVersionLabel());
+        assertFalse(document.hasFacet(ExternalReferenceConstant.EXTERNAL_REFERENCE_REPORTING_FACET));
+
+    }
 }

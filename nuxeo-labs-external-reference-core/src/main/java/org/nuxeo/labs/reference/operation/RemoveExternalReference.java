@@ -35,7 +35,7 @@ public class RemoveExternalReference extends AbstractExternalReferenceActions{
 
     @OperationMethod
     public void run() {
-        removeExternalReference(DocumentUID,ExternalReference);
+        removeExternalReference(coreSession,DocumentUID,ExternalReference);
 
     }
 

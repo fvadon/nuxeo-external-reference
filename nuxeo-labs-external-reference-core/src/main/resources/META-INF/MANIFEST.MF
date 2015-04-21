@@ -7,9 +7,9 @@ Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ManifestVersion: 2
 Bundle-Vendor: Nuxeo
-Nuxeo-Component: OSGI-INF/extensions/org.nuxeo.labs.reference.director
- yContrib.xml,OSGI-INF/extensions/org.nuxeo.labs.reference.operation.A
- ddExternalReference.xml,OSGI-INF/extensions/org.nuxeo.labs.reference.
- operation.RemoveExternalReference.xml,OSGI-INF/extensions/org.nuxeo.l
- abs.reference.operation.GetExternalReferenceInfo.xml
+Nuxeo-Component: OSGI-INF/extensions/org.nuxeo.labs.reference.operatio
+ n.AddExternalReference.xml,OSGI-INF/extensions/org.nuxeo.labs.referen
+ ce.operation.RemoveExternalReference.xml,OSGI-INF/extensions/org.nuxe
+ o.labs.reference.operation.GetExternalReferenceInfo.xml,OSGI-INF/exte
+ nsions/org.nuxeo.labs.reference.directoryAndSchemasContrib.xml
 
