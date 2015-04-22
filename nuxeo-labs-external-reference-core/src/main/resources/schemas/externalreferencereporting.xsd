@@ -35,4 +35,5 @@
   <xs:element name="externalrefs" type="nxs:stringList"/>
   <xs:element name="externalreferencelabels" type="nxs:stringList"/>
   <xs:element name="externalsources" type="nxs:stringList"/>
+  <xs:element name="externalrefscount" type="xs:integer"/>
 </xs:schema>

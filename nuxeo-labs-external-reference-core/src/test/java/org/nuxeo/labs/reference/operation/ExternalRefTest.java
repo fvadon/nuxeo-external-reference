@@ -211,7 +211,7 @@ public class ExternalRefTest extends AbstractExternalReferenceActions {
     }
 
     @Test
-    public void storeDirectoryInfoOnDocumentTest() throws OperationException {
+    public void storeReportingInfoOnDocumentTest() throws OperationException {
         DocumentModel document = session.createDocumentModel("/Folder",
                 "docToPublish", "File");
         document.setPropertyValue("dc:title", "File");
@@ -223,35 +223,55 @@ public class ExternalRefTest extends AbstractExternalReferenceActions {
         ctx.setInput(document);
         OperationChain initChain = new OperationChain("testStoreDirectoryInfo");
         initChain.add(FetchContextDocument.ID);
-        initChain.add(CreateVersion.ID).set("increment", "Major").set("saveDocument",true);
+        initChain.add(CreateVersion.ID).set("increment", "Major").set(
+                "saveDocument", true);
         // entry 1
         initChain.add(AddExternalReference.ID).set("ExternalReference",
-                "someExternalReference").set("DocumentUID",
-                document.getId());
+                "someExternalReference").set("DocumentUID", document.getId());
+        // entry 2
         initChain.add(AddExternalReference.ID).set("ExternalReference",
-                "someOtherReference").set("DocumentUID",
-                document.getId());
+                "someOtherReference").set("DocumentUID", document.getId());
         service.run(ctx, initChain);
-        document= session.getDocument(new IdRef(document.getId()));
-        assertEquals("1.0",document.getVersionLabel());
+        document = session.getDocument(new IdRef(document.getId()));
+        assertEquals("1.0", document.getVersionLabel());
         assertTrue(document.hasFacet(ExternalReferenceConstant.EXTERNAL_REFERENCE_REPORTING_FACET));
-        assertEquals(2,((String[]) document.getPropertyValue(ExternalReferenceConstant.EXTERNAL_REFERENCE_REPORTING_SCHEMA
-                + ":"
-                + ExternalReferenceConstant.EXTERNAL_REFERENCE_REPORTING_REFS)).length);
+        assertEquals(
+                2,
+                ((String[]) document.getPropertyValue(ExternalReferenceConstant.EXTERNAL_REFERENCE_REPORTING_SCHEMA
+                        + ":"
+                        + ExternalReferenceConstant.EXTERNAL_REFERENCE_REPORTING_REFS)).length);
+        assertEquals(
+                (long)2,
+                (document.getPropertyValue(ExternalReferenceConstant.EXTERNAL_REFERENCE_REPORTING_SCHEMA
+                        + ":"
+                        + ExternalReferenceConstant.EXTERNAL_REFERENCE_REPORTING_COUNT)));
 
-        //Testing update on remove works
+        // Testing update on remove works
         removeExternalReference(session, null, "someExternalReference");
-        document= session.getDocument(new IdRef(document.getId()));
-        assertEquals("1.0",document.getVersionLabel());
+        document = session.getDocument(new IdRef(document.getId()));
+        assertEquals("1.0", document.getVersionLabel());
         assertTrue(document.hasFacet(ExternalReferenceConstant.EXTERNAL_REFERENCE_REPORTING_FACET));
-        assertEquals(1,((String[]) document.getPropertyValue(ExternalReferenceConstant.EXTERNAL_REFERENCE_REPORTING_SCHEMA
-                + ":"
-                + ExternalReferenceConstant.EXTERNAL_REFERENCE_REPORTING_REFS)).length);
-        //Testinf the schema is removed if not ref.
-        removeExternalReference(session, document.getId(),null);
-        document= session.getDocument(new IdRef(document.getId()));
-        assertEquals("1.0",document.getVersionLabel());
+        assertEquals(
+                1,
+                ((String[]) document.getPropertyValue(ExternalReferenceConstant.EXTERNAL_REFERENCE_REPORTING_SCHEMA
+                        + ":"
+                        + ExternalReferenceConstant.EXTERNAL_REFERENCE_REPORTING_REFS)).length);
+        // Testinf the schema is removed if not ref.
+        removeExternalReference(session, document.getId(), null);
+        document = session.getDocument(new IdRef(document.getId()));
+        assertEquals("1.0", document.getVersionLabel());
         assertFalse(document.hasFacet(ExternalReferenceConstant.EXTERNAL_REFERENCE_REPORTING_FACET));
+    }
+
+    @Test
+    public void nonexistingDocumentTests() {
+        DocumentModel externalRef = addExternalRef(session, "fakeID",
+                "externalRef", null, null, true);
+        assertNotNull(externalRef);
+        DocumentModelList externalRefList = getExternalReferenceInfo("fakeID",
+                null);
+        assertNotNull(externalRefList);
+        assertEquals(1, externalRefList.size());
 
     }
 }

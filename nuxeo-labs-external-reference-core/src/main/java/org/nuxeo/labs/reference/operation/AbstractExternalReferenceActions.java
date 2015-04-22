@@ -20,8 +20,12 @@ import org.nuxeo.ecm.platform.dublincore.listener.DublinCoreListener;
 import org.nuxeo.ecm.platform.ec.notification.NotificationConstants;
 import org.nuxeo.labs.reference.constants.ExternalReferenceConstant;
 import org.nuxeo.runtime.api.Framework;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public abstract class AbstractExternalReferenceActions {
+
+    private static final Log log = LogFactory.getLog(AbstractExternalReferenceActions.class);
 
     /**
      * Add external reference. Will not add it again if it exists and
@@ -76,28 +80,38 @@ public abstract class AbstractExternalReferenceActions {
 
             if (canAddEntry) {
                 // Fetch the document from UID
-                DocumentModel docToAdd = coreSession.getDocument(new IdRef(
-                        documentUID));
-                if (docToAdd != null) {
-                    if (!docToAdd.isProxy()) {
-                        dm = addExternalRef(dirSession, documentUID, null,
-                                externalReference, referenceLabel,
-                                externalSource);
-                        // Update stats
-                        updateReferenceInfoForReporting(docToAdd);
-                    } else {
-                        // It's a proxy get the live doc
-                        DocumentModel liveDocument = coreSession.getSourceDocument(new IdRef(
-                                documentUID));
-                        if (liveDocument.isVersion()) {
-                            liveDocument = coreSession.getSourceDocument(liveDocument.getRef());
+                try {
+                    DocumentModel docToAdd = coreSession.getDocument(new IdRef(
+                            documentUID));
+                    if (docToAdd != null) {
+                        if (!docToAdd.isProxy()) {
+                            dm = addExternalRef(dirSession, documentUID, null,
+                                    externalReference, referenceLabel,
+                                    externalSource);
+                            // Update stats
+                            updateReferenceInfoForReporting(docToAdd);
+                        } else {
+                            // It's a proxy get the live doc
+                            DocumentModel liveDocument = coreSession.getSourceDocument(new IdRef(
+                                    documentUID));
+                            if (liveDocument.isVersion()) {
+                                liveDocument = coreSession.getSourceDocument(liveDocument.getRef());
+                            }
+                            dm = addExternalRef(dirSession,
+                                    liveDocument.getId(), documentUID,
+                                    externalReference, referenceLabel,
+                                    externalSource);
+                            // Update stats
+                            updateReferenceInfoForReporting(liveDocument);
                         }
-                        dm = addExternalRef(dirSession, liveDocument.getId(),
-                                documentUID, externalReference, referenceLabel,
-                                externalSource);
-                        // Update stats
-                        updateReferenceInfoForReporting(liveDocument);
                     }
+                } catch (Exception e) {
+                    log.warn(
+                            "Trying to store ref for a non existing document, storing it anyway",
+                            e);
+                    dm = addExternalRef(dirSession, documentUID, null,
+                            externalReference, referenceLabel, externalSource);
+
                 }
             }
             return dm;
@@ -213,24 +227,24 @@ public abstract class AbstractExternalReferenceActions {
             }
 
             // Updating the stats
-            for(String previousDocumentUID:previousDocumentUIDs) {
-            DocumentModel document = coreSession.getDocument(new IdRef(
-                    previousDocumentUID));
-            if (document != null) {
-                if (!document.isProxy()) {
-                    // Update stats
-                    updateReferenceInfoForReporting(document);
-                } else {
-                    // It's a proxy get the live doc
-                    document = coreSession.getSourceDocument(new IdRef(
-                            previousDocumentUID));
-                    if (document.isVersion()) {
-                        document = coreSession.getSourceDocument(document.getRef());
+            for (String previousDocumentUID : previousDocumentUIDs) {
+                DocumentModel document = coreSession.getDocument(new IdRef(
+                        previousDocumentUID));
+                if (document != null) {
+                    if (!document.isProxy()) {
+                        // Update stats
+                        updateReferenceInfoForReporting(document);
+                    } else {
+                        // It's a proxy get the live doc
+                        document = coreSession.getSourceDocument(new IdRef(
+                                previousDocumentUID));
+                        if (document.isVersion()) {
+                            document = coreSession.getSourceDocument(document.getRef());
+                        }
+                        // Update stats
+                        updateReferenceInfoForReporting(document);
                     }
-                    // Update stats
-                    updateReferenceInfoForReporting(document);
                 }
-            }
 
             }
         } finally {
@@ -332,6 +346,9 @@ public abstract class AbstractExternalReferenceActions {
                 // values can exist multiple time, we have to reset the full
                 // schema
                 temp.removeFacet(ExternalReferenceConstant.EXTERNAL_REFERENCE_REPORTING_FACET);
+                // Disabling events
+                disableEvents(temp);
+                temp = session.saveDocument(temp);
                 // Get the external ref values
                 DocumentModelList externalRefs = getExternalReferenceInfo(
                         temp.getId(), null);
@@ -352,7 +369,9 @@ public abstract class AbstractExternalReferenceActions {
                                 + ExternalReferenceConstant.EXTERNAL_SOURCE_FIELD));
                     }
                     temp.addFacet(ExternalReferenceConstant.EXTERNAL_REFERENCE_REPORTING_FACET);
-
+                    // Disabling events
+                    disableEvents(temp);
+                    temp = session.saveDocument(temp);
                     temp.setPropertyValue(
                             ExternalReferenceConstant.EXTERNAL_REFERENCE_REPORTING_SCHEMA
                                     + ":"
@@ -363,12 +382,17 @@ public abstract class AbstractExternalReferenceActions {
                                     + ":"
                                     + ExternalReferenceConstant.EXTERNAL_REFERENCE_REPORTING_LABELS,
                             (Serializable) externalRefsLabelsStringList);
+
                     temp.setPropertyValue(
                             ExternalReferenceConstant.EXTERNAL_REFERENCE_REPORTING_SCHEMA
                                     + ":"
                                     + ExternalReferenceConstant.EXTERNAL_REFERENCE_REPORTING_SOURCES,
                             (Serializable) externalExternalSourcesStringList);
-
+                    temp.setPropertyValue(
+                            ExternalReferenceConstant.EXTERNAL_REFERENCE_REPORTING_SCHEMA
+                                    + ":"
+                                    + ExternalReferenceConstant.EXTERNAL_REFERENCE_REPORTING_COUNT,
+                            externalRefsStringList.size());
                 }
                 // Disabling events
                 disableEvents(temp);

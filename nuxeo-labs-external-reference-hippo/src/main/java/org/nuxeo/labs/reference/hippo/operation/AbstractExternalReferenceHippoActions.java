@@ -4,16 +4,22 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Serializable;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.nuxeo.ecm.core.api.CoreSession;
 import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.api.DocumentModelList;
+import org.nuxeo.ecm.core.api.IdRef;
 import org.nuxeo.ecm.core.api.impl.DocumentModelListImpl;
 import org.nuxeo.ecm.directory.Session;
 import org.nuxeo.ecm.directory.api.DirectoryService;
@@ -25,8 +31,10 @@ import org.nuxeo.runtime.api.Framework;
 public class AbstractExternalReferenceHippoActions extends
         AbstractExternalReferenceActions {
 
+    private static final Log log = LogFactory.getLog(AbstractExternalReferenceHippoActions.class);
+
     /**
-     * Get a list of all Nuxeo documents references in Hippo from Hippo
+     * Get a list of all Nuxeo documents referenced in Hippo from Hippo
      *
      * @return
      * @throws IOException
@@ -110,6 +118,15 @@ public class AbstractExternalReferenceHippoActions extends
 
     }
 
+    /**
+     * Intended to be called from a live document, will get proxies of this
+     * document and get/store reference infos from Hippo.
+     * No control on outdated existing info
+     *
+     * @param documentUID
+     * @return DocumentModelList of newly created references
+     * @throws IOException
+     */
     protected DocumentModelList getAndStoreNuxeoDocumentRefsFromHippo(
             DocumentModel documentUID) throws IOException {
 
@@ -126,7 +143,8 @@ public class AbstractExternalReferenceHippoActions extends
                     List<String> hippoRefs = getRefsForDocumentFromHippo(proxy.getId());
                     for (String hippoRef : hippoRefs) {
                         newRefs.add(addExternalRef(dirSession,
-                                documentUID.getId(), proxy.getId(), correctHippoLink(hippoRef),
+                                documentUID.getId(), proxy.getId(),
+                                correctHippoLink(hippoRef),
                                 extractHippoLabelFromLink(hippoRef), "Hippo US"));
                     }
                 }
@@ -138,10 +156,70 @@ public class AbstractExternalReferenceHippoActions extends
         }
     }
 
+    /**
+     * Removes old infos and add up to date info (no control of dirty entries)
+     * Intended to be called from a live document, will get proxies of this
+     * document and get/store reference infos from Hippo.
+     * @param coreSession
+     * @param documentUID
+     * @return DocumentModelList of newly created references
+     * @throws IOException
+     */
     protected DocumentModelList updateHippoRefsOfNuxeoDocument(
-            CoreSession coreSession, DocumentModel documentUID) throws IOException {
-        removeExternalReference(coreSession,documentUID.getId(), null);
+            CoreSession coreSession, DocumentModel documentUID)
+            throws IOException {
+        removeExternalReference(coreSession, documentUID.getId(), null);
         return getAndStoreNuxeoDocumentRefsFromHippo(documentUID);
+
+    }
+
+    /**
+     * removes all entries and then query hippo for updated values not optimized
+     * but not other way to get the info from hippo. Will only store info for
+     * existing Document in Nuxeo.
+     *
+     * @throws IOException
+     */
+    protected DocumentModelList updateAllHippoRefsInNuxeo(CoreSession coreSession)
+            throws IOException {
+
+        // Cleaning the directory
+        DirectoryService dirService = Framework.getLocalService(DirectoryService.class);
+        Session dirSession = dirService.open(ExternalReferenceConstant.EXTERNAL_REF_DIRECTORY);
+        Map<String, Serializable> filter = new HashMap<String, Serializable>();
+        DocumentModelList newRefs = new DocumentModelListImpl();
+
+        try {
+            DocumentModelList directoryEntries = dirSession.query(filter);
+            for (DocumentModel directoryEntry : directoryEntries) {
+                dirSession.deleteEntry(directoryEntry);
+            }
+
+            List<String> hippoDocumentIds = getAllDocumentRefsFromHippo();
+            for (String hippoDocumentId : hippoDocumentIds) {
+                // Fetch the document from UID and get the source if proxy
+                try {
+                    DocumentModel docToAdd = coreSession.getDocument(new IdRef(
+                            hippoDocumentId));
+                    if (docToAdd != null) {
+                        if (docToAdd.isProxy()) {
+                            docToAdd = coreSession.getSourceDocument(new IdRef(
+                                    hippoDocumentId));
+                        }
+                        if (docToAdd.isVersion()) {
+                            docToAdd = coreSession.getSourceDocument(docToAdd.getRef());
+                        }
+                        newRefs.addAll(updateHippoRefsOfNuxeoDocument(coreSession, docToAdd));
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    log.error("Trying to get a document that does not exist", e);
+                }
+            }
+            return newRefs;
+        } finally {
+            dirSession.close();
+        }
 
     }
 
@@ -165,11 +243,13 @@ public class AbstractExternalReferenceHippoActions extends
 
     /**
      * Inventing a consistent label from the actual Ref
+     *
      * @param link
      * @return a Label
      */
-   protected String extractHippoLabelFromLink(String link){
-       return link.substring(link.lastIndexOf("/")+1,link.length()).replace("-", " ").replace(".html","");
-   }
+    protected String extractHippoLabelFromLink(String link) {
+        return link.substring(link.lastIndexOf("/") + 1, link.length()).replace(
+                "-", " ").replace(".html", "");
+    }
 
 }

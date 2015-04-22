@@ -76,7 +76,7 @@ public class ExternalRefHippoTest extends AbstractExternalReferenceHippoActions{
         List<String> nuxeoUIDs = getAllDocumentRefsFromHippo();
         assertNotNull(nuxeoUIDs);
 
-        //Test correctiong the hippo link that is incorrect
+        //Test correcting the hippo link that is incorrect
         String wrongLink = "http://www.chi.test.us.onehippo.com/nuxeo/news/2014/10/gogreen-nominated-for-unef-sustainable-business-award.html";
         String correctLink = "http://www.chi.test.us.onehippo.com/news/2014/10/gogreen-nominated-for-unef-sustainable-business-award.html";
         assertEquals(correctLink,correctHippoLink(wrongLink));
@@ -87,6 +87,11 @@ public class ExternalRefHippoTest extends AbstractExternalReferenceHippoActions{
         String label= "gogreen nominated for unef sustainable business award";
         assertEquals(label,extractHippoLabelFromLink(ref));
 
+    }
+
+    @Test
+    public void updateAllHippoRefsTest() throws IOException {
+        updateAllHippoRefsInNuxeo(session);
     }
 
 
