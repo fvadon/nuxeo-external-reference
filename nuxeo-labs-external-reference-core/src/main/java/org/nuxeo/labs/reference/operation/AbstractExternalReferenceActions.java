@@ -356,7 +356,9 @@ public abstract class AbstractExternalReferenceActions {
                 if (externalRefs.size() > 0) {
                     List<String> externalRefsStringList = new ArrayList<String>();
                     List<String> externalRefsLabelsStringList = new ArrayList<String>();
-                    List<String> externalExternalSourcesStringList = new ArrayList<String>();
+                    List<String> externalSourcesStringList = new ArrayList<String>();
+                    List<String> externalCurrentDocumentTitleStringList = new ArrayList<String>();
+
                     for (DocumentModel externalRef : externalRefs) {
                         externalRefsStringList.add((String) externalRef.getPropertyValue(ExternalReferenceConstant.EXTERNAL_REF_SCHEMA
                                 + ":"
@@ -364,9 +366,10 @@ public abstract class AbstractExternalReferenceActions {
                         externalRefsLabelsStringList.add((String) externalRef.getPropertyValue(ExternalReferenceConstant.EXTERNAL_REF_SCHEMA
                                 + ":"
                                 + ExternalReferenceConstant.EXTERNAL_REFERENCE_LABEL_FIELD));
-                        externalExternalSourcesStringList.add((String) externalRef.getPropertyValue(ExternalReferenceConstant.EXTERNAL_REF_SCHEMA
+                        externalSourcesStringList.add((String) externalRef.getPropertyValue(ExternalReferenceConstant.EXTERNAL_REF_SCHEMA
                                 + ":"
                                 + ExternalReferenceConstant.EXTERNAL_SOURCE_FIELD));
+                        externalCurrentDocumentTitleStringList.add((String) temp.getPropertyValue("dc:title"));
                     }
                     temp.addFacet(ExternalReferenceConstant.EXTERNAL_REFERENCE_REPORTING_FACET);
                     // Disabling events
@@ -387,12 +390,17 @@ public abstract class AbstractExternalReferenceActions {
                             ExternalReferenceConstant.EXTERNAL_REFERENCE_REPORTING_SCHEMA
                                     + ":"
                                     + ExternalReferenceConstant.EXTERNAL_REFERENCE_REPORTING_SOURCES,
-                            (Serializable) externalExternalSourcesStringList);
+                            (Serializable) externalSourcesStringList);
                     temp.setPropertyValue(
                             ExternalReferenceConstant.EXTERNAL_REFERENCE_REPORTING_SCHEMA
                                     + ":"
                                     + ExternalReferenceConstant.EXTERNAL_REFERENCE_REPORTING_COUNT,
                             externalRefsStringList.size());
+                    temp.setPropertyValue(
+                            ExternalReferenceConstant.EXTERNAL_REFERENCE_REPORTING_SCHEMA
+                                    + ":"
+                                    + ExternalReferenceConstant.EXTERNAL_REFERENCE_REPORTING_DOCTITLE,
+                            (Serializable) externalCurrentDocumentTitleStringList);
                 }
                 // Disabling events
                 disableEvents(temp);

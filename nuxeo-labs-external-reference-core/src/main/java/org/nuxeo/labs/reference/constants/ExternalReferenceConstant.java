@@ -14,5 +14,6 @@ public class ExternalReferenceConstant {
     public static final String EXTERNAL_REFERENCE_REPORTING_SOURCES="externalsources";
     public static final String EXTERNAL_REFERENCE_REPORTING_SCHEMA="externalreferencereporting";
     public static final String EXTERNAL_REFERENCE_REPORTING_COUNT= "externalrefscount";
+    public static final String EXTERNAL_REFERENCE_REPORTING_DOCTITLE="referenceddocumenttitle";
 
 }

@@ -246,6 +246,11 @@ public class ExternalRefTest extends AbstractExternalReferenceActions {
                         + ":"
                         + ExternalReferenceConstant.EXTERNAL_REFERENCE_REPORTING_COUNT)));
 
+        assertEquals(
+                2,
+                ((String[]) document.getPropertyValue(ExternalReferenceConstant.EXTERNAL_REFERENCE_REPORTING_SCHEMA
+                        + ":"
+                        + ExternalReferenceConstant.EXTERNAL_REFERENCE_REPORTING_DOCTITLE)).length);
         // Testing update on remove works
         removeExternalReference(session, null, "someExternalReference");
         document = session.getDocument(new IdRef(document.getId()));
