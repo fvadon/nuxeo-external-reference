@@ -18,8 +18,8 @@ import org.nuxeo.labs.reference.hippo.operation.AbstractExternalReferenceHippoAc
 import org.nuxeo.runtime.test.runner.Deploy;
 import org.nuxeo.runtime.test.runner.Features;
 import org.nuxeo.runtime.test.runner.FeaturesRunner;
+import org.junit.Ignore;
 
-import com.google.gwt.editor.client.Editor.Ignore;
 import com.google.inject.Inject;
 
 /**
@@ -67,7 +67,7 @@ public class ExternalRefHippoTest extends AbstractExternalReferenceHippoActions{
 
     }
 
-    @Ignore
+    @Ignore("Bound to a specific Hippo instance")
     @Test
     public void hippoRefsTest() throws IOException {
         String nuxeoUID= "ccd5a6f4-2440-4346-a021-36d2b613845c";

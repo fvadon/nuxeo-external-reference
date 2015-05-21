@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.nuxeo.labs.extref</groupId>
     <artifactId>nuxeo-labs-external-reference-parent</artifactId>
-    <version>7.2-SNAPSHOT</version>
+    <version>7.3-SNAPSHOT</version>
   </parent>
   <artifactId>nuxeo-labs-external-reference-mp</artifactId>
   <packaging>zip</packaging>
@@ -13,7 +13,7 @@
     <dependency>
         <groupId>org.nuxeo.labs.extref</groupId>
         <artifactId>nuxeo-labs-external-reference-core</artifactId>
-	    <version>7.2-SNAPSHOT</version>
+	    <version>7.3-SNAPSHOT</version>
     </dependency>
   </dependencies>
 
