@@ -2,6 +2,8 @@ package org.nuxeo.labs.reference.operation;
 
 import static org.junit.Assert.*;
 
+import java.util.Arrays;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -17,16 +19,27 @@ import org.nuxeo.ecm.core.api.CoreSession;
 import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.api.DocumentModelList;
 import org.nuxeo.ecm.core.api.IdRef;
+import org.nuxeo.ecm.core.api.NuxeoPrincipal;
+import org.nuxeo.ecm.core.api.repository.RepositoryManager;
+import org.nuxeo.ecm.core.api.security.ACE;
+import org.nuxeo.ecm.core.api.security.impl.ACLImpl;
+import org.nuxeo.ecm.core.api.security.impl.ACPImpl;
 import org.nuxeo.ecm.core.test.CoreFeature;
 import org.nuxeo.ecm.directory.Session;
 import org.nuxeo.ecm.directory.api.DirectoryService;
 import org.nuxeo.ecm.platform.test.PlatformFeature;
+import org.nuxeo.ecm.platform.usermanager.UserManager;
+import org.nuxeo.ecm.platform.usermanager.UserService;
 import org.nuxeo.labs.reference.constants.ExternalReferenceConstant;
 import org.nuxeo.labs.reference.operation.AddExternalReference;
 import org.nuxeo.runtime.api.Framework;
 import org.nuxeo.runtime.test.runner.Deploy;
 import org.nuxeo.runtime.test.runner.Features;
 import org.nuxeo.runtime.test.runner.FeaturesRunner;
+import org.nuxeo.ecm.core.api.CoreInstance;
+
+import javax.security.auth.login.LoginContext;
+import javax.security.auth.login.LoginException;
 
 import com.google.inject.Inject;
 
@@ -45,6 +58,9 @@ public class ExternalRefTest extends AbstractExternalReferenceActions {
     @Inject
     AutomationService service;
 
+    @Inject
+    RepositoryManager rm;
+
     protected DocumentModel folder;
 
     protected DocumentModel section;
@@ -52,6 +68,10 @@ public class ExternalRefTest extends AbstractExternalReferenceActions {
     protected DocumentModel docToPublish;
 
     protected DocumentModel publishedDoc;
+
+    protected UserManager userManager;
+
+    protected UserService userService;
 
     @Before
     public void initRepo() throws Exception {
@@ -241,7 +261,7 @@ public class ExternalRefTest extends AbstractExternalReferenceActions {
                         + ":"
                         + ExternalReferenceConstant.EXTERNAL_REFERENCE_REPORTING_REFS)).length);
         assertEquals(
-                (long)2,
+                (long) 2,
                 (document.getPropertyValue(ExternalReferenceConstant.EXTERNAL_REFERENCE_REPORTING_SCHEMA
                         + ":"
                         + ExternalReferenceConstant.EXTERNAL_REFERENCE_REPORTING_COUNT)));
@@ -277,6 +297,72 @@ public class ExternalRefTest extends AbstractExternalReferenceActions {
                 null);
         assertNotNull(externalRefList);
         assertEquals(1, externalRefList.size());
+
+    }
+
+    @Test
+    public void addRefToPublishedWithoutReadPermOnSourceTest()
+            throws OperationException, LoginException {
+        String userName = "UserA";
+        userService = (UserService) Framework.getRuntime().getComponent(
+                UserService.NAME);
+
+        userManager = userService.getUserManager();
+
+        // Setting up a user with read on the published document but not on the
+        // source.
+
+        DocumentModel user1 = userManager.getBareUserModel();
+        user1.setProperty("user", "username", userName);
+        user1.setProperty("user", "groups", Arrays.asList("members"));
+
+        userManager.createUser(user1);
+
+        NuxeoPrincipal salesUserPrincipal = userManager.getPrincipal(userName);
+        assertNotNull(salesUserPrincipal);
+        assertEquals(userName, salesUserPrincipal.getName());
+
+        OperationContext ctx = new OperationContext(session);
+
+        ctx.setInput(docToPublish);
+        OperationChain initChain = new OperationChain("testpublish");
+        initChain.add(FetchContextDocument.ID);
+        initChain.add(PublishDocument.ID).set("target", section.getId());
+        publishedDoc = (DocumentModel) service.run(ctx, initChain);
+        assertNotNull(publishedDoc);
+
+        // giving permission to everyone on the doc
+        ACPImpl acp = new ACPImpl();
+        ACLImpl acl = new ACLImpl("local");
+        ACE ace = new ACE("Everyone", "Read", true);
+        acl.add(ace);
+        acp.addACL(acl);
+        session.setACP(publishedDoc.getRef(), acp, false);
+        session.save();
+        int externalRefPreviousNumber = getExternalReferenceInfo(publishedDoc.getId(), "someExternalReference").size();
+
+        LoginContext loginContext = Framework.loginAsUser(userName);
+        CoreSession session = CoreInstance.openCoreSession(rm.getDefaultRepositoryName());
+        publishedDoc = session.getDocument(publishedDoc.getRef());
+        assertNotNull(publishedDoc);
+
+        OperationChain chain3 = new OperationChain("testAddProxy");
+        // entry 4
+        chain3.add(AddExternalReference.ID).set("ExternalReference",
+                "someExternalReference").set("DocumentUID",
+                publishedDoc.getId());
+        DocumentModel dm = (DocumentModel) service.run(ctx, chain3);
+        assertNotNull(dm);
+        assertEquals(
+                dm.getPropertyValue(ExternalReferenceConstant.EXTERNAL_LIVEDOC_UID_FIELD),
+                docToPublish.getId());
+        assertEquals(externalRefPreviousNumber+1,getExternalReferenceInfo(publishedDoc.getId(), "someExternalReference").size());
+        removeExternalReference(session, publishedDoc.getId(), "someExternalReference");
+        assertEquals(externalRefPreviousNumber,getExternalReferenceInfo(publishedDoc.getId(), "someExternalReference").size());
+
+
+        session.close();
+        loginContext.logout();
 
     }
 }

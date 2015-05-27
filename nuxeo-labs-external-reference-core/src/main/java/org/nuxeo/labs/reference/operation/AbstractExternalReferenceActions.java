@@ -26,7 +26,8 @@ import org.apache.commons.logging.LogFactory;
 public abstract class AbstractExternalReferenceActions {
 
     private static final Log log = LogFactory.getLog(AbstractExternalReferenceActions.class);
-
+    private DocumentModel liveDocument;
+    private DocumentModel directoryEntry;
     /**
      * Add external reference. Will not add it again if it exists and
      * addEvenIfAlreadyExist is false. Note that the identifiers of the entry
@@ -50,7 +51,7 @@ public abstract class AbstractExternalReferenceActions {
         DirectoryService dirService = Framework.getLocalService(DirectoryService.class);
         Session dirSession = dirService.open(ExternalReferenceConstant.EXTERNAL_REF_DIRECTORY);
         try {
-            DocumentModel dm = null;
+            directoryEntry = null;
             boolean canAddEntry = true;
 
             // Test existence and set canAddEntry to false if this is the
@@ -79,42 +80,51 @@ public abstract class AbstractExternalReferenceActions {
             }
 
             if (canAddEntry) {
+                DocumentModel docToAdd = null;
                 // Fetch the document from UID
                 try {
-                    DocumentModel docToAdd = coreSession.getDocument(new IdRef(
-                            documentUID));
-                    if (docToAdd != null) {
-                        if (!docToAdd.isProxy()) {
-                            dm = addExternalRef(dirSession, documentUID, null,
-                                    externalReference, referenceLabel,
-                                    externalSource);
-                            // Update stats
-                            updateReferenceInfoForReporting(docToAdd);
-                        } else {
-                            // It's a proxy get the live doc
-                            DocumentModel liveDocument = coreSession.getSourceDocument(new IdRef(
-                                    documentUID));
-                            if (liveDocument.isVersion()) {
-                                liveDocument = coreSession.getSourceDocument(liveDocument.getRef());
-                            }
-                            dm = addExternalRef(dirSession,
-                                    liveDocument.getId(), documentUID,
-                                    externalReference, referenceLabel,
-                                    externalSource);
-                            // Update stats
-                            updateReferenceInfoForReporting(liveDocument);
-                        }
-                    }
+                    docToAdd = coreSession.getDocument(new IdRef(documentUID));
                 } catch (Exception e) {
                     log.warn(
                             "Trying to store ref for a non existing document, storing it anyway",
                             e);
-                    dm = addExternalRef(dirSession, documentUID, null,
+                    directoryEntry = addExternalRef(dirSession, documentUID, null,
                             externalReference, referenceLabel, externalSource);
 
                 }
+                if (docToAdd != null) {
+                    if (!docToAdd.isProxy()) {
+                        directoryEntry = addExternalRef(dirSession, documentUID, null,
+                                externalReference, referenceLabel,
+                                externalSource);
+                        // Update stats
+                        updateReferenceInfoForReporting(docToAdd);
+                    } else {
+                        // It's a proxy get the live doc
+                        new UnrestrictedSessionRunner(coreSession) {
+                            @Override
+                            public void run() throws ClientException {
+                                liveDocument = coreSession.getSourceDocument(new IdRef(
+                                        documentUID));
+                                if (liveDocument.isVersion()) {
+                                    liveDocument = coreSession.getSourceDocument(liveDocument.getRef());
+                                }
+                                directoryEntry = addExternalRef(dirSession,
+                                        liveDocument.getId(), documentUID,
+                                        externalReference, referenceLabel,
+                                        externalSource);
+
+                            }
+
+                        }.runUnrestricted();
+
+                        // Update stats
+                        updateReferenceInfoForReporting(liveDocument);
+
+                    }
+                }
             }
-            return dm;
+            return directoryEntry;
         } finally {
             dirSession.close();
         }
@@ -423,4 +433,5 @@ public abstract class AbstractExternalReferenceActions {
         doc.putContextData(NXAuditEventsService.DISABLE_AUDIT_LOGGER, true);
         doc.putContextData(VersioningService.DISABLE_AUTO_CHECKOUT, true);
     }
+
 }

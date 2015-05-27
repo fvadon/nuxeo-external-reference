@@ -34,10 +34,12 @@
 			<permissions>
 				<permission name="Read">
 					<group>members</group>
+					<group>externals</group>
 					<group>administrators</group>
 				</permission>
 				<permission name="Write">
 					<group>members</group>
+					<group>externals</group>
 					<group>administrators</group>
 				</permission>
 			</permissions>
