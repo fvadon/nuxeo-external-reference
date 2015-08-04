@@ -1,3 +1,5 @@
+**DEPRECATED, please now use: [https://github.com/nuxeo-sandbox/nuxeo-external-reference](https://github.com/nuxeo-sandbox/nuxeo-external-reference)**
+
 # nuxeo-external-reference
 ===
 
